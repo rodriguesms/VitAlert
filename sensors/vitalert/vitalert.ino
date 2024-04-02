@@ -9,14 +9,14 @@
 #define I2C2_SDA_PIN 5
 #define I2C2_SCL_PIN 18
 
-TwoWire I2C2 = TwoWire(0); //I2C2 bus
+TwoWire I2C2 = TwoWire(1); //I2C2 bus
 MPU6050 mpu6050(I2C2);
 
 // **************************************** Heart rate ****************************************
 #define I2C1_SDA_PIN 21
 #define I2C1_SCL_PIN 22
 
-TwoWire I2C1 = TwoWire(1); //I2C1 bus
+TwoWire I2C1 = TwoWire(0); //I2C1 bus
 
 MAX30105 particleSensor;
 
@@ -83,6 +83,7 @@ void setup() {
   // **************************************** Temperature ***************************************
   // Start the DS18B20 sensor
   sensors.begin();
+  sensors.setWaitForConversion(0);
 }
 
 void loop() {
