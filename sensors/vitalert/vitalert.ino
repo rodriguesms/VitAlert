@@ -20,7 +20,7 @@ TwoWire I2C1 = TwoWire(1); //I2C1 bus
 
 MAX30105 particleSensor;
 
-const byte RATE_SIZE = 4;
+const byte RATE_SIZE = 16;
 byte rates[RATE_SIZE];
 byte rateSpot = 0;
 long lastBeat = 0; //Time at which the last beat occurred
