@@ -53,8 +53,8 @@ DallasTemperature sensors(&oneWire);
 
 void setup() {
   // ************************************** Fall detection **************************************
-  Serial.println("System Start");
   Serial.begin(115200);
+  Serial.println("System Start");
   I2C2.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
   mpu6050.begin();
   mpu6050.calcGyroOffsets(true);
