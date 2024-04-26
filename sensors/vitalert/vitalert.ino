@@ -9,14 +9,14 @@
 #define I2C2_SDA_PIN 5
 #define I2C2_SCL_PIN 18
 
-TwoWire I2C2 = TwoWire(1); //I2C2 bus
-MPU6050 mpu6050(I2C2);
+TwoWire iczinhodois = TwoWire(1); //iczinhodois bus
+MPU6050 mpu6050(iczinhodois);
 
 // **************************************** Heart rate ****************************************
 #define I2C1_SDA_PIN 21
 #define I2C1_SCL_PIN 22
 
-TwoWire I2C1 = TwoWire(0); //I2C1 bus
+TwoWire iczinhoum = TwoWire(0); //iczinhoum bus
 
 MAX30105 particleSensor;
 
@@ -55,14 +55,14 @@ void setup() {
   // ************************************** Fall detection **************************************
   Serial.begin(115200);
   Serial.println("System Start");
-  I2C2.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
+  iczinhodois.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
   mpu6050.begin();
   mpu6050.calcGyroOffsets(true);
 
   // // **************************************** Heart rate ****************************************
   delay(3000);
-  I2C1.begin(I2C1_SDA_PIN, I2C1_SCL_PIN);
-  if (!particleSensor.begin(I2C1, I2C_SPEED_FAST)) //400kHz speed
+  iczinhoum.begin(I2C1_SDA_PIN, I2C1_SCL_PIN);
+  if (!particleSensor.begin(iczinhoum, I2C_SPEED_FAST)) //400kHz speed
   {
     Serial.println("MAX30102 NOT INITIALIZED");
     while (1);
