@@ -5,6 +5,13 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+// *************************************** Panic button ***************************************
+#define BUTTON_PIN 25
+
+// Variables will change:
+int lastState = HIGH; // the previous state from the input pin
+int currentState;     // the current reading from the input pin
+
 // ************************************** Fall detection **************************************
 #define I2C2_SDA_PIN 5
 #define I2C2_SCL_PIN 18
@@ -52,9 +59,15 @@ OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 
 void setup() {
-  // ************************************** Fall detection **************************************
   Serial.begin(115200);
   Serial.println("System Start");
+
+  // *************************************** Panic button ***************************************
+  // initialize the pushbutton pin as an pull-up input
+  // the pull-up input pin will be HIGH when the switch is open and LOW when the switch is closed.
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  // ************************************** Fall detection **************************************
   iczinhodois.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
   mpu6050.begin();
   mpu6050.calcGyroOffsets(true);
@@ -87,6 +100,16 @@ void setup() {
 }
 
 void loop() {
+  // *************************************** Panic button ***************************************
+  // read the state of the switch/button:
+  currentState = digitalRead(BUTTON_PIN);
+
+  if(lastState == LOW && currentState == HIGH)
+    Serial.println("The state changed from LOW to HIGH");
+
+  // save the last state
+  lastState = currentState;
+
   // ************************************** Fall detection **************************************
   mpu6050.update();
 
