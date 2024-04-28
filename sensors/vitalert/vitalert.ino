@@ -12,12 +12,53 @@
 int lastState = HIGH; // the previous state from the input pin
 int currentState;     // the current reading from the input pin
 
+void setup_panic_button() {
+  // initialize the pushbutton pin as an pull-up input
+  // the pull-up input pin will be HIGH when the switch is open and LOW when the switch is closed.
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+}
+
+void loop_panic_button() {
+  // read the state of the switch/button:
+  currentState = digitalRead(BUTTON_PIN);
+
+  if(lastState == LOW && currentState == HIGH)
+    Serial.println("The state changed from LOW to HIGH");
+
+  // save the last state
+  lastState = currentState;
+}
+
 // ************************************** Fall detection **************************************
 #define I2C2_SDA_PIN 5
 #define I2C2_SCL_PIN 18
 
 TwoWire iczinhodois = TwoWire(1); //iczinhodois bus
 MPU6050 mpu6050(iczinhodois);
+
+void setup_fall_detection() {
+  iczinhodois.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
+  mpu6050.begin();
+  mpu6050.calcGyroOffsets(true);
+}
+
+void loop_fall_detection() {
+  mpu6050.update();
+
+  float accelX = mpu6050.getAccX();
+  float accelY = mpu6050.getAccY();
+  float accelZ = mpu6050.getAccZ();
+
+  float totalAccel = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
+
+  const float fallThreshold = 2; // You might need to adjust this value
+  
+  // Check for a fall
+  if (totalAccel > fallThreshold) {
+    // Possible fall detected, do something
+    Serial.println("Fall detected!");
+  }
+}
 
 // **************************************** Heart rate ****************************************
 #define I2C1_SDA_PIN 21
@@ -48,32 +89,9 @@ int Num = 30;
 #define FINGER_ON 7000
 #define MINIMUM_SPO2 90.0
 
-// **************************************** Temperature ***************************************
-// GPIO where the DS18B20 is connected to
-const int oneWireBus = 4;     
-
-// Setup a oneWire instance to communicate with any OneWire devices
-OneWire oneWire(oneWireBus);
-
-// Pass our oneWire reference to Dallas Temperature sensor 
-DallasTemperature sensors(&oneWire);
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println("System Start");
-
-  // *************************************** Panic button ***************************************
-  // initialize the pushbutton pin as an pull-up input
-  // the pull-up input pin will be HIGH when the switch is open and LOW when the switch is closed.
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-
-  // ************************************** Fall detection **************************************
-  iczinhodois.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
-  mpu6050.begin();
-  mpu6050.calcGyroOffsets(true);
-
-  // // **************************************** Heart rate ****************************************
+void setup_heart_rate() {
   delay(3000);
+
   iczinhoum.begin(I2C1_SDA_PIN, I2C1_SCL_PIN);
   if (!particleSensor.begin(iczinhoum, I2C_SPEED_FAST)) //400kHz speed
   {
@@ -92,55 +110,9 @@ void setup() {
 
   particleSensor.setPulseAmplitudeRed(0x0A); //Turn Red LED to low to indicate sensor is running
   particleSensor.setPulseAmplitudeGreen(0); //Turn off Green LED
-
-  // **************************************** Temperature ***************************************
-  // Start the DS18B20 sensor
-  sensors.begin();
-  sensors.setWaitForConversion(0);
 }
 
-void loop() {
-  // *************************************** Panic button ***************************************
-  // read the state of the switch/button:
-  currentState = digitalRead(BUTTON_PIN);
-
-  if(lastState == LOW && currentState == HIGH)
-    Serial.println("The state changed from LOW to HIGH");
-
-  // save the last state
-  lastState = currentState;
-
-  // ************************************** Fall detection **************************************
-  mpu6050.update();
-
-  float accelX = mpu6050.getAccX();
-  float accelY = mpu6050.getAccY();
-  float accelZ = mpu6050.getAccZ();
-
-  // Print the acceleration for each axis
-  /*Serial.print("Accel X: ");
-  Serial.print(accelX);
-  Serial.print(" g");
-
-  Serial.print("\tAccel Y: ");
-  Serial.print(accelY);
-  Serial.print(" g");
-
-  Serial.print("\tAccel Z: ");
-  Serial.print(accelZ);
-  Serial.println(" g");*/
-
-  float totalAccel = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
-
-  const float fallThreshold = 2; // You might need to adjust this value
-  
-  // Check for a fall
-  if (totalAccel > fallThreshold) {
-    // Possible fall detected, do something
-    Serial.println("Fall detected!");
-  }
-
-  // **************************************** Heart rate ****************************************
+void loop_heart_rate() {
   long irValue = particleSensor.getIR();    //Reading the IR value it will permit us to know if there's a finger on the sensor or not
   if (irValue > FINGER_ON ) {
     
@@ -196,13 +168,44 @@ void loop() {
     avered = 0; aveir = 0; sumirrms = 0; sumredrms = 0;
     SpO2 = 0; ESpO2 = 90.0;
   }
+}
 
-  // **************************************** Temperature ***************************************
+// **************************************** Temperature ***************************************
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 4;     
+
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature sensors(&oneWire);
+
+void setup_temperature() {
+  // Start the DS18B20 sensor
+  sensors.begin();
+  sensors.setWaitForConversion(0);
+}
+
+void loop_temperature() {
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
-  // float temperatureF = sensors.getTempFByIndex(0);
   Serial.print(temperatureC);
   Serial.println("ºC");
-  // Serial.print(temperatureF);
-  // Serial.println("ºF");
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("System Start");
+
+  setup_panic_button();
+  setup_fall_detection();
+  setup_heart_rate();
+  setup_temperature();
+}
+
+void loop() {
+  loop_panic_button();
+  loop_fall_detection();
+  loop_heart_rate();
+  loop_temperature();
 }
