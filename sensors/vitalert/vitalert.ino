@@ -8,7 +8,6 @@
 // *************************************** Panic button ***************************************
 #define BUTTON_PIN 25
 
-// Variables will change:
 int lastState = HIGH; // the previous state from the input pin
 int currentState;     // the current reading from the input pin
 
@@ -33,11 +32,11 @@ void loop_panic_button() {
 #define I2C2_SDA_PIN 5
 #define I2C2_SCL_PIN 18
 
-TwoWire iczinhodois = TwoWire(1); //iczinhodois bus
-MPU6050 mpu6050(iczinhodois);
+TwoWire i2cBus1 = TwoWire(1); //i2cBus1 bus
+MPU6050 mpu6050(i2cBus1);
 
 void setup_fall_detection() {
-  iczinhodois.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
+  i2cBus1.begin(I2C2_SDA_PIN, I2C2_SCL_PIN, 100000);
   mpu6050.begin();
   mpu6050.calcGyroOffsets(true);
 }
@@ -64,7 +63,7 @@ void loop_fall_detection() {
 #define I2C1_SDA_PIN 21
 #define I2C1_SCL_PIN 22
 
-TwoWire iczinhoum = TwoWire(0); //iczinhoum bus
+TwoWire i2cBus0 = TwoWire(0); //i2cBus0 bus
 
 MAX30105 particleSensor;
 
@@ -92,8 +91,8 @@ int Num = 30;
 void setup_heart_rate() {
   delay(3000);
 
-  iczinhoum.begin(I2C1_SDA_PIN, I2C1_SCL_PIN);
-  if (!particleSensor.begin(iczinhoum, I2C_SPEED_FAST)) //400kHz speed
+  i2cBus0.begin(I2C1_SDA_PIN, I2C1_SCL_PIN);
+  if (!particleSensor.begin(i2cBus0, I2C_SPEED_FAST)) //400kHz speed
   {
     Serial.println("MAX30102 NOT INITIALIZED");
     while (1);
