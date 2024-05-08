@@ -1,24 +1,13 @@
 version: '3.8'
 
 services:
-  mosquitto:
-    image: eclipse-mosquitto
-    container_name: mqtt_broker
-    ports:
-      - 1883:1883
-    volumes:
-      - ${PWD}/broker/config:/mosquitto/config
-      - ${PWD}/broker/data:/mosquitto/data
-      - ${PWD}/broker/log:/mosquitto/log
-
   database:
     image: postgres:latest
-    container_name: postgres_database
+    container_name: database
     restart: always
     env_file:
       - .env
     ports:
       - 5432:5432
     volumes:
-      - ./database:/docker-entrypoint-initdb.d
-      - ./database/data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql

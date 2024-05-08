@@ -1,41 +1,54 @@
 package com.vitalert.webserver.config;
 
 import org.eclipse.paho.client.mqttv3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+public class MqttConfig implements MqttCallback {
 
-@Configuration
-public class MqttConfig {
-    private static final Logger logger = LoggerFactory.getLogger(MqttConfig.class);
+    private MqttClient mqttClient;
 
-    @Bean
-    public MqttClient mqttClient() throws MqttException {
+    public MqttConfig(String broker, String clientId) throws MqttException {
+        mqttClient = new MqttClient(broker, clientId, new MemoryPersistence());
+        mqttClient.setCallback(this); // Define esta instância como o callback
+        connect();
+    }
     
-        MqttClient mqttClient = new MqttClient("tcp://localhost:1883", MqttClient.generateClientId());
-        
-        mqttClient.setCallback(new MqttCallback() {
-            @Override
-            public void connectionLost(Throwable cause) {
-                logger.error("Connection Lost.", cause);
-            }
+    private void connect() throws MqttException {
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setCleanSession(true); // Limpar sessão anterior
+        mqttClient.connect(options);
+    }
 
-            @Override
-            public void messageArrived(String topic, MqttMessage message) {
-                logger.info("Message arrived.", message.getPayload());
-            }
+    public void subscribe(String topic) throws MqttException {
+        mqttClient.subscribe(topic);
+    }
 
-            @Override
-            public void deliveryComplete(IMqttDeliveryToken token) {
-                logger.info("Delivery complete.", token);
-            }
-        });
+    @Override
+    public void connectionLost(Throwable cause) {
+        System.out.println("Conexão MQTT perdida. Tentando reconectar...");
+        try {
+            connect();
+        } catch (MqttException e) {
+            System.out.println("Falha ao reconectar: " + e.getMessage());
+        }
+    }
 
-        mqttClient.connect();
-        mqttClient.subscribe("seu/topico/aqui", 0); // Subscreva ao tópico desejado
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        System.out.println("Nova mensagem recebida:");
+        System.out.println("Tópico: " + topic);
+        System.out.println("Conteúdo: " + new String(message.getPayload()));
 
-        return mqttClient;
+        // Implemente a lógica de processamento da mensagem aqui
+        // Por exemplo, chamar métodos ou serviços, atualizar dados, etc.
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+        // Ação opcional após a entrega da mensagem
+    }
+
+    public void disconnect() throws MqttException {
+        mqttClient.disconnect();
     }
 }
